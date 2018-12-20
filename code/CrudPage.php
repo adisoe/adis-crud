@@ -1,5 +1,11 @@
 <?php
-
+// todo:
+// search link blm bisa diklik
+// search link blm ada tombol add
+// check require field
+// datepicker
+// dropdown
+// test di sql server
 class CrudPage extends Page {
 
   function requireDefaultRecords() {
@@ -24,11 +30,26 @@ class CrudPage_Controller extends Page_Controller {
       'add',
       'AddForm',
       'AddDo',
+      'AddDetailDo',
       'edit',
       'search',
       'searchajax',
-      'delete'
+      'delete',
+      'addmasterdetail',
+      'editmasterdetail',
   );
+  
+  function index(){
+    $content = '<li><a href="'.$this->Link().'search">Grid</a></li>';
+    $content .= '<li><a href="'.$this->Link().'add">Add</a></li>';
+    $content .= '<li><a href="'.$this->Link().'addmasterdetail/1">Add Master Detail</a></li>';
+    $content .= '<li><a href="'.$this->Link().'edit/1">Edit</a></li>';
+    $content .= '<li><a href="'.$this->Link().'editmasterdetail/1">Edit Master Detail</a></li>';
+    $content .= '<li><a href="'.$this->Link().'delete/1">Delete</a></li>';
+    return $this->customise(array(
+            'Content' => $content
+            ));
+  }
 
   function getCustomColumns() {
     //$config = 'Customer';
@@ -46,12 +67,47 @@ class CrudPage_Controller extends Page_Controller {
         ),
         array(
             'Column' => 'Title',
-            'Type' => 'Text',
+            'Type' => 'Varchar',
             'Required' => false
         ),
         array(
             'Column' => 'Content',
             'Type' => 'Text',
+            'Required' => false
+        )
+    );
+    
+    return $columns;
+  }
+  
+  function getCustomDetailColumns() {
+    //$config = 'Customer';
+    $columns = array();
+
+    $columns = array(        
+        array(
+            'Column' => 'ID',
+            'Type' => 'Hidden',
+            'Required' => true
+        ),
+        array(
+            'Column' => 'Price',
+            'Type' => 'Number',
+            'Required' => true
+        ),
+        array(
+            'Column' => 'Qty',
+            'Type' => 'Number',
+            'Required' => true
+        ),
+        array(
+            'Column' => 'Notes',
+            'Type' => 'Text',
+            'Required' => false
+        ),
+        array(
+            'Column' => 'Test Date',
+            'Type' => 'Date',
             'Required' => false
         )
     );
@@ -75,15 +131,7 @@ class CrudPage_Controller extends Page_Controller {
     $columns = $this->getCustomColumns();        
     foreach($columns as $idx => $col){
       // create field based on Type
-      if($col['Type'] == 'Text'){
-        $fields->push(new TextField($col['Column'], $col['Column']));
-      }
-      elseif($col['Type'] == 'Number'){
-        $fields->push(new NumericField($col['Column'], $col['Column']));
-      }
-      else{
-        $fields->push(new TextField($col['Column'], $col['Column']));
-      }
+      $fields->push(CrudPage_Controller::generateFieldsByType($col['Type'], $col['Column'], $col['Column']));      
     }
     // custom fields disini
     $fields->removeByName('ID');
@@ -91,6 +139,7 @@ class CrudPage_Controller extends Page_Controller {
     $action = new FieldList(
             $button = new FormAction('AddDo', 'Save')
     );
+    //echo $button->getName();
     //$button->addExtraClass('btn-lg');
     $validator = new RequiredFields('Title', 'Price');
 
@@ -99,7 +148,7 @@ class CrudPage_Controller extends Page_Controller {
   }
 
   function AddDo($data, $form) {
-    //var_dump($data);
+    //echo '<pre>'; var_dump($data);die();
     if (isset($data['ID']) && $data['ID']) {
       // update mode
       $product = CrudData::get()->byID($data['ID']);
@@ -125,6 +174,9 @@ class CrudPage_Controller extends Page_Controller {
     $form = $this->AddForm(); // edit juga ttp pakai add form
     $form->Fields()->push(new HiddenField('ID', 'ID', $id));
     $data = CrudData::get()->byID($id); // load data
+    if (!$data) {
+      return 'error';
+    }
     $form->loadDataFrom($data); // inject data to form
     return $this->customise(array(
                 'Title' => 'Edit',
@@ -197,6 +249,211 @@ class CrudPage_Controller extends Page_Controller {
     return json_encode($result);
   }
 
+  function addmasterdetail() {
+    //var_dump(Session::get("FormInfo.BootstrapForm_AddForm.formError"));
+    $form = $this->AddForm();
+    $form->Fields()->push(new LiteralField('DetailForm', $this->AddDetailForm()));
+    $form->Actions()->removeByName('action_AddDo');
+    $form->Actions()->push(new FormAction('AddDetailDo', 'Save')); // ganti method kalau save
+    
+    return $this->customise(array(
+                'Title' => 'Add Master Detail',
+                'Form' => $form,
+                'RowDetailForm' => $this->RowDetailForm(),
+                'DetailColumns' => new ArrayList($this->getCustomDetailColumns())
+            ))->renderWith(array('CrudPage', 'Page'));
+  }
+  
+  static function generateFieldsByType($type, $name, $label, $value=''){
+    //var_dump($value);
+    $field = null;
+    if($type == 'Varchar'){
+      $field =  new TextField($name, $label);
+      $field->setAttribute('placeholder', $label);
+      $field->setValue($value);
+    }
+    elseif($type == 'Text'){
+      $field =  new TextareaField($name, $label);
+      $field->setAttribute('placeholder', $label);
+      $field->setValue($value);
+    }
+    elseif($type == 'Date'){
+      $field =  new TextField($name, $label);
+      $field->setAttribute('placeholder', $label);
+      $field->setValue($value);
+      $field->addExtraClass('datepicker');
+    }
+    elseif($type == 'Number'){
+      $field =  new NumericField($name, $label);
+      $field->setAttribute('placeholder', $label);
+      $field->setValue($value);
+    }
+    elseif($type == 'Hidden'){
+      $field =  new HiddenField($name, $label);
+      $field->setValue($value);
+    }
+    else{
+      $field =  new TextField($name, $label);
+      $field->setAttribute('placeholder', $label);
+      $field->setValue($value);
+    }
+    //$field->setValue(999);
+    return $field;
+  }
+  
+  function RowDetailForm($data=null){
+    $is_table = true;
+    $fields = new FieldList();
+    $columns = $this->getCustomDetailColumns();            
+    foreach($columns as $idx => $col){
+      // create field based on Type
+      if($data){
+        // jika ada data, set value
+        $fields->push(CrudPage_Controller::generateFieldsByType($col['Type'], 'DataDetail['.$col['Column'].'][]', $col['Column'], $data->$col['Column']));
+        //var_dump($data->$col['Column']);
+      }else{
+        $fields->push(CrudPage_Controller::generateFieldsByType($col['Type'], 'DataDetail['.$col['Column'].'][]', $col['Column']));            
+      }      
+    } 
+    $html_row = '';
+    foreach($fields as $field){
+      if($is_table){
+        $html_row .= '<td>'.$field->Field().'</td>';
+      }else{
+        $html_row .= '<td>'.$field->Field().'</td>';
+      }
+    }
+    if($is_table){      
+      $html_row .= '<td><a href="#" class="btn btn-danger button_delete_detail">delete</a></td>';
+      $html_row = '<tr>'.$html_row.'</tr>';
+      
+      return $html_row;
+    }else{
+      return $html;
+    }    
+  }
+  
+  function AddDetailForm($data=null) {
+    $is_table = true;
+    if($is_table){      
+      $columns = $this->getCustomDetailColumns();            
+      
+      $html_head = '';
+      foreach($columns as $idx => $col){
+        $html_head .= '<th>'.$col['Column'].'</th>';
+      }
+      $html_head .= '<th>Action</th>';
+      
+      // body
+      $html_body = '';
+      if($data){
+        // jika ada data, loop semua data dlm bentuk table
+        foreach($data->CrudDetail() as $detail){
+          $html_body.= $this->RowDetailForm($detail);    
+        }
+      }else{
+        $html_body = $this->RowDetailForm();
+      }
+      
+      return '<table class="table" id="table_detail">
+        <thead>'.$html_head.'</thead>
+        <tbody>'.$html_body.'</tbody>
+      </table>
+      <a href="#" class="btn btn-primary" id="button_add_detail">Add Detail</a>';
+    }else{
+      return $this->RowDetailForm();
+    }    
+  }
+  
+  function AddDetailDo($data, $form) {
+    //echo '<pre>'; var_dump($data);die();
+    // SAVE MASTER
+    if (isset($data['ID']) && $data['ID']) {
+      // update mode
+      $product = CrudData::get()->byID($data['ID']);
+      unset($data['ID']);      
+    } else {
+      // new mode
+      $product = new CrudData();
+    }
+    $product->update($data);
+    $product->write();
+    
+    // SAVE DETAIL
+    
+    if(isset($data['DataDetail']) && count($data['DataDetail'])){
+      // hapus all detail
+      $sql = "delete from CrudDetailData where CrudID='$product->ID'";
+      DB::query($sql);
+      
+      $arr_detail = array();
+      // get first key
+      $first_key = key($data['DataDetail']);
+      $total_data = count($data['DataDetail'][$first_key]);
+      //echo $first_key.' '.$total_data;die();     
+      for($i=0; $i<$total_data; $i++){
+        // ubah format array supaya mudah dibaca
+        $arr_temp = array();
+        foreach($data['DataDetail'] as $idx => $detail){          
+          $arr_temp[$idx] = $data['DataDetail'][$idx][$i];
+        }
+        $arr_detail[] = $arr_temp;
+        
+        // save detail
+        $detail_obj = new CrudDetailData();
+        unset($arr_temp['ID']);
+        $detail_obj->update($arr_temp);        
+        $detail_obj->CrudID = $product->ID; // link to master
+        $detail_obj->write();
+      }
+      //echo '<pre>'; var_dump($arr_detail);die();
+    }
+
+    // good / info / bad
+    $form->sessionMessage('success', 'good');
+    $this->redirectBack();
+  }
+  
+  function editmasterdetail() {
+    $id = $this->request->param('ID');
+    if (!$id) {
+      return 'error';
+    }        
+    $data = CrudData::get()->byID($id); // load data    
+    if (!$data) {
+      return 'error';
+    }
+    $form = $this->AddForm();    
+    $form->Fields()->push(new HiddenField('ID', 'ID', $id));
+    $form->Fields()->push(new LiteralField('DetailForm', $this->AddDetailForm($data)));
+    $form->Actions()->removeByName('action_AddDo');
+    $form->Actions()->push(new FormAction('AddDetailDo', 'Save')); // ganti method kalau save
+    $form->loadDataFrom($data); // inject data to form
+    
+    // convert detail data to json
+    //$html_detail = '';
+    //$arr_detail = array();
+    //foreach($data->CrudDetail() as $detail){
+      //$html_detail .= $this->RowDetailForm($detail);
+//      $columns = $this->getCustomDetailColumns();            
+//      $arr_temp = array();
+//      foreach($columns as $idx => $col){        
+//        $arr_temp[$col['Column']] = $detail->$col['Column'];
+//      }
+//      $arr_detail[] = $arr_temp;
+    //}
+    //echo json_encode($arr_detail);die();
+    //var_dump($html_detail);die();
+    
+    return $this->customise(array(
+                'Title' => 'Edit Master Detail',
+                'Form' => $form,
+                'IsEdit' => true,
+                'RowDetailForm' => $this->RowDetailForm(),
+                'DetailColumns' => new ArrayList($this->getCustomDetailColumns())
+                //'DetailData' => json_encode($arr_detail)
+            ))->renderWith(array('CrudPage', 'Page'));
+  }
 }
 
 ?>

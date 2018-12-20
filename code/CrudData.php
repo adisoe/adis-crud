@@ -18,7 +18,8 @@ class CrudData extends DataObject {
   );
   
   static $has_many = array(
-      'Stock' => 'ProductStockData'
+      'Stock' => 'ProductStockData',
+      'CrudDetail' => 'CrudDetailData'
   );
   
   function onBeforeWrite() {

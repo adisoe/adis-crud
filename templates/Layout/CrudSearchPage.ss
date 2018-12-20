@@ -34,6 +34,6 @@
         'url' : 'crud/searchajax'
       }
     });
-  });
+  });  
 })(jQuery);  
 </script>  
