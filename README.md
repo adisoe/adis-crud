@@ -13,9 +13,19 @@ Cara menggunakan:
 File yang perlu diedit / disesuaikan:
 ```sh
 code/CrudPage.php 
+
+atau "find" yang comment "SETTING INI"
 ```
 - method **getCustomColumns** --> menambahkan setting kolom yang ingin muncul di add / edit form & data table
 
-## Belum lengkap:
-- master detail
-- action approve reject
+## TODO:
+- [x] master detail
+- [x] action approve reject
+- [x] search link blm bisa diklik
+- [x] search link blm ada tombol add
+- [x] check require field
+- [x] datepicker
+- [x] autonumeric
+- [x] dropdown
+- [] test di mysql other
+- [] test di sql server

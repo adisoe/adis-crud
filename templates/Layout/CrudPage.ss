@@ -1,3 +1,8 @@
+<link rel="stylesheet" href="adis-crud/css/bootstrap-datetimepicker.css">
+<script src="adis-crud/js/moment.min.js"></script>
+<script src="adis-crud/js/bootstrap-datetimepicker.js"></script>
+<script src="adis-crud/js/autoNumeric.js"></script>
+
 <div class="container">
 <div class="row">
 <div class="col-md-12">
@@ -8,23 +13,23 @@
 </div>
 </div>
 
+<table id="row_detail" style="display:none;">$RowDetailForm</table>
+
 <script>
 (function($){
   function initPlugin(){
-    $('.datepicker').datepicker({
-      todayBtn: "linked",
-      keyboardNavigation: false,
-      forceParse: false,
-      calendarWeeks: true,
-      autoclose: true
+    $('.datepicker').datetimepicker({        
+      format: 'YYYY-MM-DD'
     });
+
+    $('.autonumeric').autoNumeric('init',{mDec:0});  //autoNumeric with defaults
   }
   initPlugin();
-  
-  var row_detail = '$RowDetailForm';  
+
   //alert(detail_data[0].Price);
   $('#button_add_detail').on('click', function(){
-    $('#table_detail').append(row_detail);
+    //console.log($('#row_detail').text());
+    $('#table_detail').append($('#row_detail').html());
     initPlugin();
     return false;
   });

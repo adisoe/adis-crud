@@ -1,10 +1,12 @@
 <?php
 // todo:
-// search link blm bisa diklik
-// search link blm ada tombol add
-// check require field
-// datepicker
-// dropdown
+// [done] search link blm bisa diklik
+// [done] search link blm ada tombol add
+// [done] check require field
+// [done] datepicker
+// [done] autonumeric
+// [done] dropdown
+// test di mysql other
 // test di sql server
 class CrudPage extends Page {
 
@@ -51,6 +53,7 @@ class CrudPage_Controller extends Page_Controller {
             ));
   }
 
+  // SETTING INI
   function getCustomColumns() {
     //$config = 'Customer';
     $columns = array();
@@ -80,6 +83,7 @@ class CrudPage_Controller extends Page_Controller {
     return $columns;
   }
   
+  // SETTING INI
   function getCustomDetailColumns() {
     //$config = 'Customer';
     $columns = array();
@@ -109,10 +113,31 @@ class CrudPage_Controller extends Page_Controller {
             'Column' => 'Test Date',
             'Type' => 'Date',
             'Required' => false
+        ),
+        array(
+            'Column' => 'Test Select',
+            'Type' => 'Select',
+            'Required' => true,
+            'Source' => CrudData::get()->map() // Source harus array
         )
     );
+    // set default value
+    foreach($columns as $idx => $row){
+      if(!isset($row['Source'])){
+        $columns[$idx]['Source'] = '';
+      }
+    }
     
     return $columns;
+  }
+  
+  function getDetailType($column){
+    foreach($this->getCustomDetailColumns() as $row){
+      if($row['Column'] == $column){
+        return $row['Type'];
+      }
+    }
+    return '';    
   }
 
   function add() {
@@ -194,7 +219,7 @@ class CrudPage_Controller extends Page_Controller {
     $data->delete();
     $form = $this->AddForm();
     $form->sessionMessage('deleted', 'info');
-    return $this->redirect($this->Link() . 'add');
+    return $this->redirect($this->Link() . 'search');
   }
 
   function search() {
@@ -216,6 +241,7 @@ class CrudPage_Controller extends Page_Controller {
     $fieldsort = (isset($_REQUEST['columns'][$columnsort]['data']) && $_REQUEST['columns'][$columnsort]['data']) ? $_REQUEST['columns'][$columnsort]['data'] : 'Created';
     // ============ end filter
 
+    // SETTING INI
     $result = CrudData::get()
             ->limit($length, $start)
             ->sort($fieldsort . ' ' . $typesort);
@@ -234,10 +260,27 @@ class CrudPage_Controller extends Page_Controller {
       foreach($columns as $idx => $col){
         $temp[] = $row->$col['Column'];
       }
-      $temp[] = '<a href="">Edit</a>
-        <a href="">Delete</a>
-        <a href="">More</a>
-        ';
+      $edit_link = $this->Link().'edit/'.$row->ID;
+      if($row->CrudDetail()->count()){
+        $edit_link = $this->Link().'editmasterdetail/'.$row->ID;
+      }
+      $delete_link = $this->Link().'delete/'.$row->ID;
+      $temp[] = '<a href="'.$edit_link.'" class="btn btn-primary">Edit</a>
+        <a href="'.$delete_link.'" class="btn btn-danger btn_delete">Delete</a>
+        <div class="" style="position:relative; display:inline-block;">
+          <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+            More
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+            <li><a href="#">Action</a></li>
+            <li><a href="#">Another action</a></li>
+            <li><a href="#">Something else here</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a href="#">Separated link</a></li>
+          </ul>
+        </div>
+      ';
       $arr[] = $temp;      
     }
 
@@ -264,7 +307,7 @@ class CrudPage_Controller extends Page_Controller {
             ))->renderWith(array('CrudPage', 'Page'));
   }
   
-  static function generateFieldsByType($type, $name, $label, $value=''){
+  static function generateFieldsByType($type, $name, $label, $value='', $source='', $required=false){
     //var_dump($value);
     $field = null;
     if($type == 'Varchar'){
@@ -287,15 +330,25 @@ class CrudPage_Controller extends Page_Controller {
       $field =  new NumericField($name, $label);
       $field->setAttribute('placeholder', $label);
       $field->setValue($value);
+      $field->addExtraClass('autonumeric');
     }
     elseif($type == 'Hidden'){
       $field =  new HiddenField($name, $label);
       $field->setValue($value);
     }
+    elseif($type == 'Select'){
+      $field =  new DropdownField($name, $label);
+      $field->setSource($source);
+      $field->setValue($value);
+      $field->setEmptyString('(Pilih '.$label.')');
+    }
     else{
       $field =  new TextField($name, $label);
       $field->setAttribute('placeholder', $label);
       $field->setValue($value);
+    }
+    if($required && $field){
+      $field->setAttribute('required', 'required');
     }
     //$field->setValue(999);
     return $field;
@@ -309,10 +362,10 @@ class CrudPage_Controller extends Page_Controller {
       // create field based on Type
       if($data){
         // jika ada data, set value
-        $fields->push(CrudPage_Controller::generateFieldsByType($col['Type'], 'DataDetail['.$col['Column'].'][]', $col['Column'], $data->$col['Column']));
+        $fields->push(CrudPage_Controller::generateFieldsByType($col['Type'], 'DataDetail['.$col['Column'].'][]', $col['Column'], $data->$col['Column'], $col['Source'], $col['Required']));
         //var_dump($data->$col['Column']);
       }else{
-        $fields->push(CrudPage_Controller::generateFieldsByType($col['Type'], 'DataDetail['.$col['Column'].'][]', $col['Column']));            
+        $fields->push(CrudPage_Controller::generateFieldsByType($col['Type'], 'DataDetail['.$col['Column'].'][]', $col['Column'], '', $col['Source'], $col['Required']));            
       }      
     } 
     $html_row = '';
@@ -394,8 +447,13 @@ class CrudPage_Controller extends Page_Controller {
       for($i=0; $i<$total_data; $i++){
         // ubah format array supaya mudah dibaca
         $arr_temp = array();
-        foreach($data['DataDetail'] as $idx => $detail){          
+        foreach($data['DataDetail'] as $idx => $detail){                    
           $arr_temp[$idx] = $data['DataDetail'][$idx][$i];
+          // kalau number harus di-convert
+          //echo $this->getDetailType($idx).' '.$idx.' ';
+          if($this->getDetailType($idx) == 'Number'){            
+            $arr_temp[$idx] = CT::convertCurrencyToFloat($arr_temp[$idx]);
+          }
         }
         $arr_detail[] = $arr_temp;
         

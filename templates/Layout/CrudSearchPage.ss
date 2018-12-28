@@ -6,6 +6,8 @@
 <div class="col-md-12">
   <h1>$Title</h1>
   $Form
+  <a href="$Link/add" class="btn btn-success"><i class="fa fa-plus"></i> Tambah</a>
+  <a href="$Link/addmasterdetail" class="btn btn-success"><i class="fa fa-plus"></i> Tambah Master Detail</a>
   <table id="datatable1" class="table">
     <thead>
       <tr>
@@ -32,6 +34,16 @@
       'serverSide': true,
       'ajax': {
         'url' : 'crud/searchajax'
+      }
+    });
+    
+    $(document).on('click', '.btn_delete', function(){
+      //alert('yakin untuk hapus?');
+      var r = confirm("Yakin untuk hapus?");
+      if (r == true) {
+        
+      } else {
+        return false;
       }
     });
   });  
