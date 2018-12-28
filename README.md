@@ -14,7 +14,7 @@ File yang perlu diedit / disesuaikan:
 ```sh
 code/CrudPage.php 
 
-atau "find" yang comment "SETTING INI"
+atau "find" comment "SETTING INI"
 ```
 - method **getCustomColumns** --> menambahkan setting kolom yang ingin muncul di add / edit form & data table
 
@@ -27,5 +27,5 @@ atau "find" yang comment "SETTING INI"
 - [x] datepicker
 - [x] autonumeric
 - [x] dropdown
-- [] test di mysql other
-- [] test di sql server
+- [ ] test di mysql other
+- [ ] test di sql server
