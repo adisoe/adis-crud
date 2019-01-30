@@ -5,6 +5,8 @@ silverstripe frontend CRUD and search using DataTable
 Library yang dibutuhkan:
 - silverstripe bootstrap form https://github.com/unclecheese/silverstripe-bootstrap-forms
 - jquery DataTable 
+- jquery AutoNumeric https://plugins.jquery.com/autoNumeric/
+- boostrap datetimepicker http://eonasdan.github.io/bootstrap-datetimepicker/
 
 Cara menggunakan:
 - copy ke root project silvestripe, nama folder harus "adis-crud"
@@ -18,6 +20,9 @@ atau "find" comment "SETTING INI"
 ```
 - method **getCustomColumns** --> menambahkan setting kolom yang ingin muncul di add / edit form & data table
 
+## PHP Active Record
+- 
+
 ## TODO:
 - [x] master detail
 - [x] action approve reject
@@ -27,5 +32,6 @@ atau "find" comment "SETTING INI"
 - [x] datepicker
 - [x] autonumeric
 - [x] dropdown
+- [ ] field di grid & field di form bisa beda 
 - [ ] test di mysql other
 - [ ] test di sql server

@@ -1,0 +1,23 @@
+ilham
+=====
+ada bug ShowInList
+bug browse
+bug default value
+soft delete
+revisi dokumentasi
+variabel pakai user_call
+
+adis
+====
+dokumentasi
+browser
+idtjual blm bisa generate otomatis
+comment setting
+CrudDetailARModel blm otomatis masih harus rename manual
+file
+label blm bisa diganti
+add default value
+separator rupiah
+filter sesuai field yg di list
+coba kalo diturunkan
+samakan variable dengan ilham

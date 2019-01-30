@@ -10,16 +10,19 @@
 // test di sql server
 class CrudPage extends Page {
 
+  static $page_class = 'CrudPage';
+
   function requireDefaultRecords() {
-    if (!DataObject::get_one('CrudPage')) {
-      $page = new CrudPage();
-      $page->Title = 'Crud';
-      $page->URLSegment = 'crud';
+    $class = self::$page_class;
+    if (!DataObject::get_one($class)) {
+      $page = new $classs();
+      $page->Title = $class;
+      $page->URLSegment = strtolower($class);
       $page->Status = 'Published';
       $page->write();
       $page->publish('Stage', 'Live');
       $page->flushCache();
-      DB::alteration_message('CrudPage created on page tree', 'created');
+      DB::alteration_message($class.' created on page tree', 'created');
     }
     parent::requireDefaultRecords();
   }
@@ -66,7 +69,8 @@ class CrudPage_Controller extends Page_Controller {
         array(
             'Column' => 'LastEdited',
             'Type' => 'Date',
-            'Required' => false
+            'Required' => false,
+            'HideTable' => true
         ),
         array(
             'Column' => 'Title',
@@ -258,6 +262,9 @@ class CrudPage_Controller extends Page_Controller {
       //var_dump($row['TglTReqCosting']);die();
       $temp = array();
       foreach($columns as $idx => $col){
+        if(isset($col['HideTable']) && $col['HideTable']){
+          continue;
+        }
         $temp[] = $row->$col['Column'];
       }
       $edit_link = $this->Link().'edit/'.$row->ID;
@@ -327,7 +334,7 @@ class CrudPage_Controller extends Page_Controller {
       $field->addExtraClass('datepicker');
     }
     elseif($type == 'Number'){
-      $field =  new NumericField($name, $label);
+      $field =  new TextField($name, $label);
       $field->setAttribute('placeholder', $label);
       $field->setValue($value);
       $field->addExtraClass('autonumeric');

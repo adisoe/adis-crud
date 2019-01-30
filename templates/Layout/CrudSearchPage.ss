@@ -6,13 +6,15 @@
 <div class="col-md-12">
   <h1>$Title</h1>
   $Form
-  <a href="$Link/add" class="btn btn-success"><i class="fa fa-plus"></i> Tambah</a>
-  <a href="$Link/addmasterdetail" class="btn btn-success"><i class="fa fa-plus"></i> Tambah Master Detail</a>
+  <a href="{$Link}add" class="btn btn-success"><i class="fa fa-plus"></i> Tambah</a>
+  <a href="{$Link}addmasterdetail" class="btn btn-success"><i class="fa fa-plus"></i> Tambah Master Detail</a>
   <table id="datatable1" class="table">
     <thead>
       <tr>
         <% loop Columns %>
-        <th>$Column</th>
+          <% if not HideTable %>
+          <th>$Column</th>
+          <% end_if %>
         <% end_loop %>
         <th>Action</th>
       </tr>
@@ -33,7 +35,7 @@
       'processing': true,
       'serverSide': true,
       'ajax': {
-        'url' : 'crud/searchajax'
+        'url' : '{$Link}searchajax'
       }
     });
     
