@@ -1,23 +1,30 @@
 ilham
 =====
-ada bug ShowInList
-bug browse
-bug default value
-soft delete
-revisi dokumentasi
-variabel pakai user_call
+[x] ada bug ShowInList
+[x] bug browse
+[x] bug default value
+[x] soft delete
+[ ] revisi dokumentasi
+[x] variabel pakai user_call
+[x] nama ganti MGMasterDesktop
+[x] browse blm pakai db sindu
 
 adis
 ====
-dokumentasi
-browser
-idtjual blm bisa generate otomatis
-comment setting
-CrudDetailARModel blm otomatis masih harus rename manual
-file
-label blm bisa diganti
-add default value
-separator rupiah
-filter sesuai field yg di list
-coba kalo diturunkan
-samakan variable dengan ilham
+[ ] dokumentasi
+[x] browse
+[x] idtjual blm bisa generate otomatis
+[x] comment setting
+[x] bisa upload file
+[x] label blm bisa diganti
+[x] add default value
+[x] separator rupiah
+[x] filter sesuai field yg di list
+[x] coba kalo diturunkan
+[x] CrudDetailARModel blm otomatis masih harus rename manual
+[x] samakan nama variabel adis & ilham
+[ ] date picker tidak muncul
+
+next
+====
+[] support sql server

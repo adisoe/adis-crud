@@ -8,12 +8,14 @@
   $Form
   <a href="{$Link}add" class="btn btn-success"><i class="fa fa-plus"></i> Tambah</a>
   <a href="{$Link}addmasterdetail" class="btn btn-success"><i class="fa fa-plus"></i> Tambah Master Detail</a>
+  <a href="#" class="btn btn-primary" id="btn_detail_search"><i class="fa fa-search"></i> Detail Search</a>
+  $SearchForm
   <table id="datatable1" class="table">
     <thead>
       <tr>
         <% loop Columns %>
           <% if not HideTable %>
-          <th>$Column</th>
+          <th data-order="$Column">$Label</th>
           <% end_if %>
         <% end_loop %>
         <th>Action</th>
@@ -35,7 +37,10 @@
       'processing': true,
       'serverSide': true,
       'ajax': {
-        'url' : '{$Link}searchajax'
+        'url' : '{$Link}searchajax',
+        "data": function(d){
+          $SearchDataTableAdditional
+        }
       }
     });
     
@@ -47,6 +52,17 @@
       } else {
         return false;
       }
+    });
+    
+    $('form.form_search').on('submit', function(e){
+      e.preventDefault();
+      table.draw();
+    });
+    
+    $('form.form_search').toggle();
+    $('#btn_detail_search').on('click', function(){
+      $('form.form_search').toggle();
+      return false;
     });
   });  
 })(jQuery);  

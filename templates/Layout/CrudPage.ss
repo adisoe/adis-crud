@@ -38,7 +38,14 @@
     //alert('delete');
     $(this).closest('tr').remove();
     return false;
-  });    
+  });        
+  
+  $('.text-browse').on('click', function(){      
+    var module = $(this).attr('browse-module');
+    textBrowse = $(this);
+    // variable win ada di paling luar / atas javascript
+    win = window.open('browse/window/'+module, 'MyWindow', "menubar=0,toolbar=0,width=600,height=400");    
+  });
   
   <% if $DetailData %>
 //  var detail_data = $DetailData;
