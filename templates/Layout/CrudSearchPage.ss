@@ -1,5 +1,5 @@
-<link rel="stylesheet" href="$ThemeDir/css/meanmenu/jquery.dataTables.min.css">
-<script src="$ThemeDir/js/data-table/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="adis-crud/css/jquery.dataTables.min.css">
+<script src="adis-crud/js/data-table/jquery.dataTables.min.js"></script>
 
 <div class="container">
 <div class="row">
@@ -10,6 +10,7 @@
   <a href="{$Link}addmasterdetail" class="btn btn-success"><i class="fa fa-plus"></i> Tambah Master Detail</a>
   <a href="#" class="btn btn-primary" id="btn_detail_search"><i class="fa fa-search"></i> Detail Search</a>
   $SearchForm
+  <br/> <br/>
   <table id="datatable1" class="table">
     <thead>
       <tr>

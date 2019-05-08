@@ -39,6 +39,7 @@ class CrudARModel extends ActiveRecord\Model {
   }
 
   function countChild($pk, $id) {    
+    if(!$this->child_class){ return 0; }
     $class = new ReflectionClass($this->child_class);
     $table = $class->getStaticPropertyValue('table_name');
     $sql = "select count($pk) as total

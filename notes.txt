@@ -24,6 +24,9 @@ adis
 [x] CrudDetailARModel blm otomatis masih harus rename manual
 [x] samakan nama variabel adis & ilham
 [ ] date picker tidak muncul
+[x] css dan js perlu dimasukkan di library ini
+[ ] handle relasi many many
+[ ] boolean
 
 next
 ====

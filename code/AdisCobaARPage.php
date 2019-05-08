@@ -35,9 +35,13 @@ class AdisCobaARPage_Controller extends CrudARPage_Controller{
       array(
           'Column' => 'Bruto',
           'Label' => 'Bruto',
-          'Type' => 'Number',
+          'Type' => 'Select',
           'Required' => false,
-          'DefaultValue' => 100
+          'DefaultValue' => 100,
+          'Source' => array(
+              '1' => 'val 1',
+              '2' => 'val 2'
+          )
       ),
       array(
           'Column' => 'IdMCust',

@@ -36,6 +36,7 @@ class CrudARPage_Controller extends Page_Controller {
   var $table_detail_class = 'CrudDetailARModel';
   var $table = 'mgaptbeli';
   var $table_detail = 'mgaptbelid';
+  var $table_many_many = 'mgaptbeli_many_many';
   var $pk = 'IdTBeli';
   var $pk_detail = 'IdTBeliD';
   var $foreign_key = 'IdTBeli';
@@ -65,6 +66,13 @@ class CrudARPage_Controller extends Page_Controller {
           'Type' => 'Number',
           'Required' => false,
           'DefaultValue' => 100
+      ),
+      array(
+          'Column' => 'IdMKas',
+          'Label' => 'ID Master Kas',
+          'Type' => 'Select',
+          'Required' => false,
+          'Source' => 'get_mgkbmkas'
       )
   );
   var $detail_columns = array(
@@ -72,6 +80,14 @@ class CrudARPage_Controller extends Page_Controller {
           'Column' => 'IdTBeli',
           'Label' => 'ID Beli',
           'Type' => 'Hidden',
+          'Required' => true
+      ),
+      array(
+          'Column' => 'IdMBrg',
+          'Label' => 'ID Barang',
+          //'Type' => 'Hidden',
+          'Type' => 'Select',
+          'Source' => 'get_mgkbmkas',
           'Required' => true
       ),
       array(
@@ -118,6 +134,7 @@ class CrudARPage_Controller extends Page_Controller {
       'delete',
       'addmasterdetail',
       'editmasterdetail',
+      'view',
   );
 
   function index() {
@@ -135,6 +152,16 @@ class CrudARPage_Controller extends Page_Controller {
   function getCustomColumns() {
     //$config = 'Customer';
     $columns = $this->columns;
+    foreach ($columns as $idx => $row) {
+      if (!isset($row['Source'])) {
+        $columns[$idx]['Source'] = '';
+      }else{
+        if($row['Type'] == 'Select' && is_string($columns[$idx]['Source'])){
+          // kalau select dan source-nya string ambil dari method
+          $columns[$idx]['Source'] = call_user_func(array($this, $columns[$idx]['Source']));
+        }
+      }
+    }
     return $columns;
   }
 
@@ -145,6 +172,11 @@ class CrudARPage_Controller extends Page_Controller {
     foreach ($columns as $idx => $row) {
       if (!isset($row['Source'])) {
         $columns[$idx]['Source'] = '';
+      }else{
+        if($row['Type'] == 'Select' && is_string($columns[$idx]['Source'])){
+          // kalau select dan source-nya string ambil dari method
+          $columns[$idx]['Source'] = call_user_func(array($this, $columns[$idx]['Source']));
+        }
       }
     }
     return $columns;
@@ -202,7 +234,8 @@ class CrudARPage_Controller extends Page_Controller {
         $browse_field->setAttribute('browse-return-key', $col['BrowseReturnKey']);
         $fields->push($browse_field);
       }else{
-        $fields->push(self::generateFieldsByType($col['Type'], $col['Column'], $col['Label'], $val));
+        //$fields->push(self::generateFieldsByType($col['Type'], $col['Column'], $col['Label'], $val));
+        $fields->push(self::generateFieldsByType($col['Type'], $col['Column'], $col['Label'], $val, $col['Source']));
       }
       // jika file, tambahkan field preview
       if ($col['Type'] == 'File') {
@@ -292,7 +325,7 @@ class CrudARPage_Controller extends Page_Controller {
     $arr_data = $this->convertLowerArray($arr_data);
     $form->loadDataFrom($arr_data); // inject data to form
     return $this->customise(array(
-                'Title' => 'Edit',
+                'Title' => 'Edit #'.$id,
                 'Form' => $form
             ))->renderWith(array('CrudPage', 'Page'));
   }
@@ -452,19 +485,21 @@ class CrudARPage_Controller extends Page_Controller {
         $edit_link = $this->Link() . 'editmasterdetail/' . $row->$temp_field_pk;
       }
       $delete_link = $this->Link() . 'delete/' . $row->$temp_field_pk;
-      $temp[] = '<a href="' . $edit_link . '" class="btn btn-primary">Edit</a>
-        <a href="' . $delete_link . '" class="btn btn-danger btn_delete">Delete</a>
+      $view_link = $this->Link() . 'view/' . $row->$temp_field_pk;
+      $temp[] = '<a href="' . $edit_link . '" class="btn btn-primary btn-sm">Edit</a>
+        <a href="' . $view_link . '" class="btn btn-secondary btn-sm">View</a>
+        <a href="' . $delete_link . '" class="btn btn-danger btn_delete btn-sm">Delete</a>
         <div class="" style="position:relative; display:inline-block;">
-          <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+          <button class="btn btn-default dropdown-toggle btn-sm" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
             More
             <span class="caret"></span>
           </button>
           <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-            <li><a href="#">Action</a></li>
-            <li><a href="#">Another action</a></li>
-            <li><a href="#">Something else here</a></li>
-            <li role="separator" class="divider"></li>
-            <li><a href="#">Separated link</a></li>
+            <li class="dropdown-item"><a href="#">Action</a></li>
+            <li class="dropdown-item"><a href="#">Another action</a></li>
+            <li class="dropdown-item"><a href="#">Something else here</a></li>
+            <li role="separator" class="dropdown-divider"></li>
+            <li class="dropdown-item"><a href="#">Separated link</a></li>
           </ul>
         </div>
       ';
@@ -505,6 +540,10 @@ class CrudARPage_Controller extends Page_Controller {
       $field = new TextareaField($name, $label);
       $field->setAttribute('placeholder', $label);
       $field->setValue($value);
+    } elseif ($type == 'Email') {
+      $field = new EmailField($name, $label);
+      $field->setAttribute('placeholder', $label);
+      $field->setValue($value);
     } elseif ($type == 'Date') {
       //var_dump($value);
       $field = new TextField($name, $label);
@@ -539,6 +578,9 @@ class CrudARPage_Controller extends Page_Controller {
       $field->addExtraClass('text-browse');
       $field->setAttribute('browse-module', $source);
       $field->setValue($value);
+    } elseif ($type == 'Boolean') {
+      $field = new CheckboxField($name, $label);      
+      $field->setValue($value);
     } else {
       $field = new TextField($name, $label);
       $field->setAttribute('placeholder', $label);
@@ -568,6 +610,7 @@ class CrudARPage_Controller extends Page_Controller {
         if (isset($col['DefaultValue'])) {
           $val = $col['DefaultValue'];
         }
+        //var_dump($col['Source']);
         $fields->push(self::generateFieldsByType($col['Type'], 'DataDetail[' . $col['Column'] . '][]', $col['Label'], $val, $col['Source'], $col['Required']));
       }
     }
@@ -603,17 +646,26 @@ class CrudARPage_Controller extends Page_Controller {
       // body
       $html_body = '';
       if ($data) {
-        //echo '<pre>';var_dump($data);
-        // jika ada data, loop semua data dlm bentuk table
-        $temp_field_pk = strtolower($this->pk);
-        //if (call_user_func(array($this->table_class, 'countChild'), $this->table_detail_class, $temp_field_pk, $data->$temp_field_pk)) {
-        $table_class = $this->table_class;
-        $table = new $table_class();
-        if ($table->countChild($temp_field_pk, $data->$temp_field_pk)) {
-          //$childs = call_user_func(array($this->table_class, 'getChild'), $temp_field_pk, $data->$temp_field_pk);
-          $childs = $table->getChild($temp_field_pk, $data->$temp_field_pk);
-          foreach ($childs as $detail) {
+        if($this->table_many_many){
+          $temp_field_pk = strtolower($this->pk);
+          $data = $this->getDataManyMany($data->$temp_field_pk);    
+          foreach ($data as $detail) {
             $html_body.= $this->RowDetailForm($detail);
+          }
+        }
+        else{
+          //echo '<pre>';var_dump($data);
+          // jika ada data, loop semua data dlm bentuk table
+          $temp_field_pk = strtolower($this->pk);
+          //if (call_user_func(array($this->table_class, 'countChild'), $this->table_detail_class, $temp_field_pk, $data->$temp_field_pk)) {
+          $table_class = $this->table_class;
+          $table = new $table_class();
+          if ($table->countChild($temp_field_pk, $data->$temp_field_pk)) {
+            //$childs = call_user_func(array($this->table_class, 'getChild'), $temp_field_pk, $data->$temp_field_pk);
+            $childs = $table->getChild($temp_field_pk, $data->$temp_field_pk);
+            foreach ($childs as $detail) {
+              $html_body.= $this->RowDetailForm($detail);
+            }
           }
         }
       } else {
@@ -680,7 +732,7 @@ class CrudARPage_Controller extends Page_Controller {
     $product->save();
 
     // SAVE DETAIL
-
+    $arr_many_many = array();
     if (isset($data['DataDetail']) && count($data['DataDetail'])) {
       // hapus all detail
       $table_class = $this->table_class;
@@ -718,8 +770,29 @@ class CrudARPage_Controller extends Page_Controller {
         $detail_obj->$pk_detail = $this->generateDetailID();
         $detail_obj->$foreign_key = $data[$this->pk];
         $detail_obj->save();
+        
+        // array many many
+        $arr_many_many[] = array(
+            $this->pk => $data[$this->pk],
+            $this->pk_detail => $detail_obj->$pk_detail
+        );
       }
       //echo '<pre>'; var_dump($arr_detail);die();
+    }
+    
+    // SAVE MANY MANY
+    if($this->table_many_many && count($arr_many_many)){
+      $sql = "DELETE FROM $this->table_many_many WHERE $this->pk='".$data[$this->pk]."'";
+      //echo $sql;
+      $connection = ActiveRecord\ConnectionManager::get_connection();
+      $result = $connection->query($sql);
+      
+      foreach($arr_many_many as $row_many_many){
+        $sql = "INSERT INTO $this->table_many_many ($this->pk, $this->pk_detail) VALUES ('".$row_many_many[$this->pk]."', '".$row_many_many[$this->pk_detail]."')";
+        //echo $sql;
+        $connection = ActiveRecord\ConnectionManager::get_connection();
+        $result = $connection->query($sql);
+      }
     }
 
     // good / info / bad
@@ -782,7 +855,7 @@ class CrudARPage_Controller extends Page_Controller {
     if (!$id) {
       return 'error';
     }
-    $data = call_user_func(array($this->table_class, 'getByID'), $this->pk, $id);
+    $data = call_user_func(array($this->table_class, 'getByID'), $this->pk, $id);    
     if (!$data) {
       return 'error';
     }
@@ -820,7 +893,71 @@ class CrudARPage_Controller extends Page_Controller {
                     //'DetailData' => json_encode($arr_detail)
             ))->renderWith(array('CrudPage', 'Page'));
   }
+  
+  function IsMasterDetail(){
+    if($this->table_detail_class){
+      return true;
+    }
+    return false;
+  }
 
+  function view() {
+    //var_dump(Session::get("FormInfo.BootstrapForm_AddForm.formError"));
+    $id = $this->request->param('ID');
+    if (!$id) {
+      return 'error';
+    }
+    $data = call_user_func(array($this->table_class, 'getByID'), $this->pk, $id);
+    if (!$data) {
+      return 'error';
+    }
+
+    $html = '';
+    $arr_data = $data->attributes();
+    $arr_data = $this->convertLowerArray($arr_data);
+    //var_dump($arr_data);die();
+    //$columns = $this->getCustomColumns();
+    foreach ($arr_data as $idx => $col) {
+      $html .= '<tr>';
+      //$html .= '<td>'.$col['Column'].'</td><td>'.$arr_data[$col['Column']].'</td>';
+      $html .= '<td>'.$idx.'</td><td>'.$col.'</td>';
+      $html .= '</tr>';      
+    }
+    if($html){
+      $html = '<table class="table">'.$html.'</table>';
+    }
+    //echo $html;die();
+    
+    
+    return $this->customise(array(
+                'Title' => 'View #'.$id,
+                'Content' => $html
+            ))->renderWith(array('CrudPage', 'Page'));
+  }
+  
+  function getDataManyMany($id){
+    $sql = "SELECT * 
+        FROM $this->table_many_many 
+        LEFT JOIN $this->table_detail ON ".$this->table_many_many.".".$this->pk_detail." = $this->table_detail.".$this->pk_detail."    
+        WHERE ".$this->table_many_many.".$this->pk='$id'";
+    $result = call_user_func(array($this->table_class, 'find_by_sql'), $sql);
+    $arr = array();
+    foreach($result as $row){
+      //var_dump($row);die();
+      $arr[] = $row;
+    }
+    return $arr;
+  }
+  
+  function get_mgkbmkas(){
+    $sql = "SELECT * FROM mgkbmkas ORDER BY nmmkas ASC";
+    $result = call_user_func(array($this->table_class, 'find_by_sql'), $sql);
+    $arr = array();
+    foreach($result as $row){
+      $arr[$row->idmkas] = $row->nmmkas;
+    }
+    return $arr;
+  }
 }
 
 ?>
