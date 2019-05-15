@@ -36,9 +36,10 @@ class CrudARPage_Controller extends Page_Controller {
   var $table_detail_class = 'CrudDetailARModel';
   var $table = 'mgaptbeli';
   var $table_detail = 'mgaptbelid';
-  var $table_many_many = 'mgaptbeli_many_many';
+//  var $table_many_many = 'mgaptbeli_many_many';
   var $pk = 'IdTBeli';
   var $pk_detail = 'IdTBeliD';
+//  var $pk_detail = 'KdMKas';
   var $foreign_key = 'IdTBeli';
   var $columns = array(
       array(
@@ -633,6 +634,30 @@ class CrudARPage_Controller extends Page_Controller {
   }
 
   function AddDetailForm($data = null) {
+    if($this->table_many_many){
+      $arr = array();
+      $table_class = $this->table_class;
+      $table = new $table_class();      
+      $childs = $table->getAllChild();
+      $pk_detail = strtolower($this->pk_detail);
+      foreach($childs as $child){
+        $arr[$child->$pk_detail] = $child->$pk_detail;
+      }
+      $checkbox = new CheckboxSetField('DataManyMany', 'Many Many', $arr);
+      // set selected values
+      if ($data) {        
+        $temp_field_pk = strtolower($this->pk);
+        $data = $this->getDataManyMany($data->$temp_field_pk);    
+        $arr_default = array();
+        foreach($data as $row){
+          $arr_default[$row->$pk_detail] = $row->$pk_detail;
+        }
+        $checkbox->setDefaultItems($arr_default);
+        //echo '<pre>';var_dump($data);die();
+      }
+      return $checkbox->Field();
+    }
+    
     $is_table = true;
     if ($is_table) {
       $columns = $this->getCustomDetailColumns();
@@ -728,6 +753,7 @@ class CrudARPage_Controller extends Page_Controller {
     }
     $data_save = $data;
     unset($data_save['DataDetail']);
+    unset($data_save['DataManyMany']);
     $product->set_attributes($data_save);
     $product->save();
 
@@ -781,14 +807,28 @@ class CrudARPage_Controller extends Page_Controller {
     }
     
     // SAVE MANY MANY
-    if($this->table_many_many && count($arr_many_many)){
+//    if($this->table_many_many && count($arr_many_many)){
+//      $sql = "DELETE FROM $this->table_many_many WHERE $this->pk='".$data[$this->pk]."'";
+//      //echo $sql;
+//      $connection = ActiveRecord\ConnectionManager::get_connection();
+//      $result = $connection->query($sql);
+//      
+//      foreach($arr_many_many as $row_many_many){
+//        $sql = "INSERT INTO $this->table_many_many ($this->pk, $this->pk_detail) VALUES ('".$row_many_many[$this->pk]."', '".$row_many_many[$this->pk_detail]."')";
+//        //echo $sql;
+//        $connection = ActiveRecord\ConnectionManager::get_connection();
+//        $result = $connection->query($sql);
+//      }
+//    }
+    
+    if (isset($data['DataManyMany']) && count($data['DataManyMany'])) {
       $sql = "DELETE FROM $this->table_many_many WHERE $this->pk='".$data[$this->pk]."'";
       //echo $sql;
       $connection = ActiveRecord\ConnectionManager::get_connection();
       $result = $connection->query($sql);
       
-      foreach($arr_many_many as $row_many_many){
-        $sql = "INSERT INTO $this->table_many_many ($this->pk, $this->pk_detail) VALUES ('".$row_many_many[$this->pk]."', '".$row_many_many[$this->pk_detail]."')";
+      foreach($data['DataManyMany'] as $idx_many => $row_many){
+        $sql = "INSERT INTO $this->table_many_many ($this->pk, $this->pk_detail) VALUES ('".$data[$this->pk]."', '".$idx_many."')";
         //echo $sql;
         $connection = ActiveRecord\ConnectionManager::get_connection();
         $result = $connection->query($sql);
@@ -936,9 +976,12 @@ class CrudARPage_Controller extends Page_Controller {
   }
   
   function getDataManyMany($id){
+//    $sql = "SELECT * 
+//        FROM $this->table_many_many 
+//        LEFT JOIN $this->table_detail ON ".$this->table_many_many.".".$this->pk_detail." = $this->table_detail.".$this->pk_detail."    
+//        WHERE ".$this->table_many_many.".$this->pk='$id'";
     $sql = "SELECT * 
         FROM $this->table_many_many 
-        LEFT JOIN $this->table_detail ON ".$this->table_many_many.".".$this->pk_detail." = $this->table_detail.".$this->pk_detail."    
         WHERE ".$this->table_many_many.".$this->pk='$id'";
     $result = call_user_func(array($this->table_class, 'find_by_sql'), $sql);
     $arr = array();

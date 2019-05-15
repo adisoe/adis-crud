@@ -27,6 +27,11 @@ class CrudARModel extends ActiveRecord\Model {
     ));
     return $result;
   }
+  
+  function getAllChild() {
+    $result = call_user_func(array($this->child_class, 'find'), 'all');
+    return $result;
+  }
 
   function deleteChild($pk, $id) {
     $class = new ReflectionClass($this->child_class);
@@ -74,6 +79,7 @@ class CrudARModel extends ActiveRecord\Model {
 class CrudDetailARModel extends ActiveRecord\Model {
 
   static $table_name = 'mgaptbelid';
+//  static $table_name = 'mgkbmkas';
 
 }
 
